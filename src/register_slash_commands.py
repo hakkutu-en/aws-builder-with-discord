@@ -9,7 +9,7 @@ from logging import Logger, basicConfig, getLogger
 ############
 log_level: str = environ.get("LOG_LEVEL", "DEBUG")
 DISCORD_TOKEN: str | None = environ.get("DISCORD_TOKEN")
-APPLICATION_ID: str | None = environ.get("APPLICATION_ID")
+APPLICATION_ID: str | None = environ.get("DISCORD_APPLICATION_ID")
 DISCORD_API_URL: str = f"https://discord.com/api/v10/applications/{APPLICATION_ID}/commands"
 
 ################
