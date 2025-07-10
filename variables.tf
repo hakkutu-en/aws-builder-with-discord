@@ -57,3 +57,8 @@ variable "deployed_by" {
   type        = string
   default     = "hakkutu-en/aws-builder-with-discord"
 }
+
+variable "discord_public_key" {
+  description = "Discord Public Key for signature verification."
+  type        = string
+}

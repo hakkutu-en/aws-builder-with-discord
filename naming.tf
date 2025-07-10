@@ -21,4 +21,11 @@ locals {
   ])
 
   temp_dir = "/tmp"
+
+  discord_public_key_name = join("/", [
+    var.business_name,
+    local.environment,
+    var.application_name,
+    "public-key"
+  ])
 }
