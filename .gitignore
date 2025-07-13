@@ -1,0 +1,13 @@
+# Python cache
+__pycache__
+
+# Dependencies
+common/python/*
+!common/python/launch_instance.py
+
+# Terraform files
+terraform*
+.terraform*
+
+# Test files
+**test_data**
