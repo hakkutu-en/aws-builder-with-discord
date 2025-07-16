@@ -52,6 +52,47 @@ resource "aws_cloudwatch_log_group" "ping" {
   retention_in_days = var.cloudwatch_retention
 
   tags = merge(local.common_tags, {
-    Name = "${aws_lambda_function.ping.function_name}"
+    Name = aws_lambda_function.ping.function_name
+  })
+}
+
+#########################
+# Signature verification
+#########################
+data "archive_file" "verify_signature" {
+  type        = "zip"
+  source_file = "${path.module}/lambdas/verify_signature.py"
+  output_path = "${local.temp_dir}/${var.application_name}/verify_signature.zip"
+}
+
+resource "aws_lambda_function" "verify_signature" {
+  function_name = "${local.base_name}-verify-signature"
+  role          = aws_iam_role.verify_signature.arn
+
+  filename         = data.archive_file.verify_signature.output_path
+  source_code_hash = data.archive_file.verify_signature.output_sha256
+  handler          = "verify_signature.lambda_handler"
+  runtime          = var.python_version
+  memory_size      = var.lambda_memory_size
+  timeout          = var.lambda_timeout
+
+  environment {
+    variables = {
+      LOG_LEVEL               = var.log_level
+      DISCORD_PUBLIC_KEY_NAME = "/${local.discord_public_key_name}"
+    }
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${local.base_name}-verify-signature"
+  })
+}
+
+resource "aws_cloudwatch_log_group" "verify_signature" {
+  name              = "/aws/lambda/${aws_lambda_function.verify_signature.function_name}"
+  retention_in_days = var.cloudwatch_retention
+
+  tags = merge(local.common_tags, {
+    Name = aws_lambda_function.verify_signature.function_name
   })
 }
