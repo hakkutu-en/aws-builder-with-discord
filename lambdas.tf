@@ -1,0 +1,57 @@
+#################
+# Layer - common
+#################
+data "archive_file" "common" {
+  type        = "zip"
+  source_dir  = "${path.module}/common"
+  output_path = "${local.temp_dir}/${var.application_name}/common.zip"
+}
+
+resource "aws_lambda_layer_version" "common" {
+  layer_name  = "${local.base_name}-layer-common"
+  description = "Common dependencies for all, ${var.application_name}, lambdas functionality."
+
+  filename            = data.archive_file.common.output_path
+  source_code_hash    = data.archive_file.common.output_base64sha256
+  compatible_runtimes = [var.python_version]
+}
+
+###################
+# Ping interaction
+###################
+data "archive_file" "ping" {
+  type        = "zip"
+  source_file = "${path.module}/src/ping.py"
+  output_path = "${local.temp_dir}/${var.application_name}/ping.zip"
+}
+
+resource "aws_lambda_function" "ping" {
+  function_name = "${local.base_name}-ping"
+  role          = aws_iam_role.ping.arn
+
+  filename         = data.archive_file.ping.output_path
+  source_code_hash = data.archive_file.ping.output_base64sha256
+  handler          = "ping.lambda_handler"
+  runtime          = var.python_version
+  memory_size      = var.lambda_memory_size
+  timeout          = var.lambda_timeout
+
+  environment {
+    variables = {
+      LOG_LEVEL = var.log_level
+    }
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${local.base_name}-ping"
+  })
+}
+
+resource "aws_cloudwatch_log_group" "ping" {
+  name              = "/aws/lambda/${aws_lambda_function.ping.function_name}"
+  retention_in_days = var.cloudwatch_retention
+
+  tags = merge(local.common_tags, {
+    Name = "${aws_lambda_function.ping.function_name}"
+  })
+}
