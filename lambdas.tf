@@ -21,7 +21,7 @@ resource "aws_lambda_layer_version" "common" {
 ###################
 data "archive_file" "ping" {
   type        = "zip"
-  source_file = "${path.module}/src/ping.py"
+  source_file = "${path.module}/lambdas/ping.py"
   output_path = "${local.temp_dir}/${var.application_name}/ping.zip"
 }
 
