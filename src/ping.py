@@ -16,10 +16,10 @@ logger.setLevel(log_level)
 #####################
 # Lambda entry point
 #####################
-def lambda_handler(event, context):
-     signature_verified = event.get("signature_verified", False)
-     interaction_type = event.get("interaction_type", 1)
-     status_code = event.get("statusCode", 401)
+def lambda_handler(event, context) -> dict[str, int | str | dict[str, int | str]]:
+     signature_verified: bool = event.get("signature_verified", False)
+     interaction_type: int = event.get("interaction_type", 1)
+     status_code: int = event.get("statusCode", 401)
 
      logger.info(f"Event: {dumps(event, indent = 2)}")
 
