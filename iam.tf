@@ -127,6 +127,66 @@ resource "aws_iam_role_policy_attachment" "verify_signature_lambda_basic_exec" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+##############
+# EC2 Manager
+##############
+resource "aws_iam_role" "ec2_manager" {
+  name = "${local.base_name}-ec2-manager"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = merge(local.common_tags, {
+    Name = "${local.base_name}-ec2-manager"
+  })
+}
+
+resource "aws_iam_policy" "ec2_manager" {
+  name        = aws_iam_role.ec2_manager.name
+  description = "IAM policy for ec2_manager lambda function"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = [
+          aws_cloudwatch_log_group.ec2_manager.arn
+        ]
+      }
+    ]
+  })
+
+  tags = merge(local.common_tags, {
+    Name = aws_iam_role.ec2_manager.name
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_manager" {
+  role       = aws_iam_role.ec2_manager.name
+  policy_arn = aws_iam_policy.ec2_manager.arn
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_manager_lambda_basic_exec" {
+  role       = aws_iam_role.ec2_manager.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
 ############
 # EC2 Logic
 ############
