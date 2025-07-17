@@ -96,3 +96,43 @@ resource "aws_cloudwatch_log_group" "verify_signature" {
     Name = aws_lambda_function.verify_signature.function_name
   })
 }
+
+##############
+# EC2 Manager
+##############
+data "archive_file" "ec2_manager" {
+  type        = "zip"
+  source_file = "${path.module}/lambdas/ec2_manager.py"
+  output_path = "${local.temp_dir}/${var.application_name}/ec2_manager.zip"
+}
+
+resource "aws_lambda_function" "ec2_manager" {
+  function_name = "${local.base_name}-ec2-manager"
+  role          = aws_iam_role.ec2_manager.arn
+
+  filename         = data.archive_file.ec2_manager.output_path
+  source_code_hash = data.archive_file.ec2_manager.output_sha256
+  handler          = "ec2_manager.lambda_handler"
+  runtime          = var.python_version
+  memory_size      = var.lambda_memory_size
+  timeout          = var.lambda_timeout
+
+  environment {
+    variables = {
+      LOG_LEVEL = var.log_level
+    }
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${local.base_name}-ec2-manager"
+  })
+}
+
+resource "aws_cloudwatch_log_group" "ec2_manager" {
+  name              = "/aws/lambda/${aws_lambda_function.ec2_manager.function_name}"
+  retention_in_days = var.cloudwatch_retention
+
+  tags = merge(local.common_tags, {
+    Name = aws_lambda_function.ec2_manager.function_name
+  })
+}
