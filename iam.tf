@@ -126,3 +126,75 @@ resource "aws_iam_role_policy_attachment" "verify_signature_lambda_basic_exec" {
   role       = aws_iam_role.verify_signature.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
+
+############
+# EC2 Logic
+############
+resource "aws_iam_role" "ec2_logic" {
+  name = "${local.base_name}-ec2-logic"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "states.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = merge(local.common_tags, {
+    Name = "${local.base_name}-ec2-logic"
+  })
+}
+
+resource "aws_iam_policy" "ec2_logic" {
+  name        = aws_iam_role.ec2_logic.name
+  description = "IAM policy for ec2-logic state machine"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "lambda:InvokeFunction"
+        ],
+        Resource = [
+          aws_lambda_function.verify_signature.arn,
+          aws_lambda_function.ping.arn,
+          aws_lambda_function.ec2_manager.arn
+        ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:CreateLogDelivery",
+          "logs:GetLogDelivery",
+          "logs:UpdateLogDelivery",
+          "logs:DeleteLogDelivery",
+          "logs:ListLogDeliveries",
+          "logs:PutResourcePolicy",
+          "logs:DescribeResourcePolicies",
+          "logs:DescribeLogGroups"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+
+  tags = merge(local.common_tags, {
+    Name = "${aws_iam_role.ec2_logic.name}"
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "ec2_logic" {
+  role       = aws_iam_role.ec2_logic.name
+  policy_arn = aws_iam_policy.ec2_logic.arn
+}
