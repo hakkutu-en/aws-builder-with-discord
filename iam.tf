@@ -258,3 +258,56 @@ resource "aws_iam_role_policy_attachment" "ec2_logic" {
   role       = aws_iam_role.ec2_logic.name
   policy_arn = aws_iam_policy.ec2_logic.arn
 }
+
+###################
+# Interactions API
+###################
+resource "aws_iam_role" "interactions_api" {
+  name = "${local.base_name}-interactions-api"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "apigateway.amazonaws.com"
+        }
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = merge(local.common_tags, {
+    Name = "${local.base_name}-interactions-api"
+  })
+}
+
+resource "aws_iam_policy" "interactions_api" {
+  name        = aws_iam_role.interactions_api.name
+  description = "IAM policy for interactions_api API Gateway"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "states:StartSyncExecution"
+        ]
+        Resource = [
+          aws_sfn_state_machine.ec2_logic.arn
+        ]
+      }
+    ]
+  })
+
+  tags = merge(local.common_tags, {
+    Name = aws_iam_role.interactions_api.name
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "interactions_api" {
+  role       = aws_iam_role.interactions_api.name
+  policy_arn = aws_iam_policy.interactions_api.arn
+}
