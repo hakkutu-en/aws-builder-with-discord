@@ -73,8 +73,10 @@ resource "aws_lambda_function" "verify_signature" {
   source_code_hash = data.archive_file.verify_signature.output_sha256
   handler          = "verify_signature.lambda_handler"
   runtime          = var.python_version
+  layers           = [aws_lambda_layer_version.common.arn]
   memory_size      = var.lambda_memory_size
   timeout          = var.lambda_timeout
+  architectures    = [var.lambda_architecture]
 
   environment {
     variables = {
