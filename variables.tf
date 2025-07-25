@@ -62,3 +62,15 @@ variable "discord_public_key" {
   description = "Discord Public Key for signature verification."
   type        = string
 }
+
+variable "interactions_api_dn" {
+  description = "The domain name to use for the Interactions API"
+  type        = string
+  default     = "builder.aws.playground-77.co.za"
+}
+
+variable "interactions_api_root_dn" {
+  description = "The root domain for Route53"
+  type        = string
+  default     = "aws.playground-77.co.za"
+}
